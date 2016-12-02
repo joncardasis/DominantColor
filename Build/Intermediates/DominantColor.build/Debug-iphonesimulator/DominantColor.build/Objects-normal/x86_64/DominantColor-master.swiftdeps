@@ -1,9 +1,0 @@
-version: "Apple Swift version 3.0.1 (swiftlang-800.0.58.6 clang-800.0.42.1)"
-options: "05e1322b7a9526bfd77411db46074590"
-build_time: [534028232, 159940000]
-inputs:
-  "/Users/jcardasi/Desktop/DominantColor/DominantColor/PixelPoint.swift": [533944817, 0]
-  "/Users/jcardasi/Desktop/DominantColor/DominantColor/DominantColor.swift": [534028232, 0]
-  "/Users/jcardasi/Desktop/DominantColor/DominantColor/ViewController.swift": [533936216, 0]
-  "/Users/jcardasi/Desktop/DominantColor/DominantColor/Cluster.swift": [533945124, 0]
-  "/Users/jcardasi/Desktop/DominantColor/DominantColor/AppDelegate.swift": [534027878, 0]
