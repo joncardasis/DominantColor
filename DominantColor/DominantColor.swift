@@ -111,21 +111,7 @@ func getPixels(from image: UIImage) -> [PixelPoint]{
         //let color = UIColor(red: CGFloat(r)/255.0, green: CGFloat(g)/255.0, blue: CGFloat(color_b)/255.0, alpha: 1)
         pixels[i] = (PixelPoint(x: r, y: g, z: color_b))
     }
-    
-//    for row in 0..<scaledImg.height {
-//        for column in 0..<scaledImg.width {
-//            let location = scaledImg.width * row + column
-//            let startByte = location * 4 //shift 4 bytes for rgba
-//            
-//            let r = imageData[startByte]
-//            let g = imageData[startByte+1]
-//            let b = imageData[startByte+2]
-//            
-//            let color = UIColor(red: CGFloat(r)/255.0, green: CGFloat(g)/255.0, blue: CGFloat(b)/255.0, alpha: 1)
-//            pixels[location] = (PixelPoint(x: r, y: g, z: b))
-//        }
-//    }
-    
+
     return pixels as! [PixelPoint]
 }
 
@@ -157,23 +143,20 @@ func recalculateCentroids(clusters: inout [Cluster]){
             var sumZ = 0
             
             for point in cluster.points {
-                //print("x: \(point.x)") //MARK: DEBUG
                 sumX += Int(point.x)
                 sumY += Int(point.y)
                 sumZ += Int(point.z)
             }
-            
-            //let xValue = UInt8(sumX/pointsCount)//MARK: DEBUG
             cluster.centroid.setCoords(x: UInt8(sumX/pointsCount), y: UInt8(sumY/pointsCount), z: UInt8(sumZ/pointsCount))
         }
     }
 }
 
 //https://msdn.microsoft.com/en-us/magazine/mt185575.aspx
-//Pre: numClusters > 0
 //Using algorithmic seeding, distribute clusters to the best of our knowledge of the data set
-//Pre: Will assign clusters to inital positions. Clusters should be empty
-//Uses proportional fitness selection to map the cluster's centroids
+//Pre: clusters must be initalized with size 0 
+//     numClusters > 0
+//Post: clusters will have numClusters elements and be the best mapped random points from the points array
 func kPlusPlusClusterDistribution(points: inout [PixelPoint], clusters: inout [Cluster], numClusters: Int) {
     var usedPoints = [Int]() //stores indices of used points from points array
     
@@ -247,9 +230,6 @@ func kmeans(tempImage: UIImage/*, points: [PixelPoint]*/, numClusters k: Int, mi
 //    }
     
     
-    //DEBUG
-    //clusters[0].centroid.setCoords(x: 255, y: 243, z: 24)
-    //END DEBUG
     
     
     /* Initialize iteration variables */
@@ -290,10 +270,5 @@ func kmeans(tempImage: UIImage/*, points: [PixelPoint]*/, numClusters k: Int, mi
         }
     }
     
-    
     return clusters.map { $0.centroid }
 }
-
-
-
-

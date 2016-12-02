@@ -9,9 +9,10 @@
 import Foundation
 
 class Cluster {
+    var id: Int
     var points: [PixelPoint]
     var centroid: PixelPoint
-    var id: Int
+    
     
     init(id: Int) {
         self.id = id
@@ -23,13 +24,14 @@ class Cluster {
         points.append(point)
     }
     
+    /* MARK: Deprecated
     //Will set the centroid to a random 3d point between values of min (inclusive) to max (exclusive)
     func setCentroidRandom(min: UInt32, max: UInt32) {
         centroid = PixelPoint(x: UInt8(arc4random_uniform(max) + min), y: UInt8(arc4random_uniform(max) + min), z: UInt8(arc4random_uniform(max) + min))
     }
+    */
     
-    
-    func debugPrint(){
+    func debugPrint(){ //MARK: Debug
         print("Cluster: \(self.id)")
         print("\tCentroid:\(centroid)")
         for attachedPoint in points {

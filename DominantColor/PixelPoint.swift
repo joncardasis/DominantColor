@@ -20,18 +20,6 @@ class PixelPoint {
         self.z = z
     }
     
-    required init(_ model: PixelPoint) {
-        self.x = model.x
-        self.y = model.y
-        self.z = model.z
-        self.parentCluster = model.parentCluster
-    }
-    
-    /* Returns a deep copy of Self */
-    func copy() -> PixelPoint {
-        return PixelPoint.init(self)
-    }
-    
     func setCoords(x: UInt8, y: UInt8, z: UInt8) {
         self.x = x
         self.y = y
@@ -49,5 +37,17 @@ class PixelPoint {
     func colorValue() -> UIColor {
         return UIColor(red: CGFloat(x)/255.0, green: CGFloat(y)/255.0, blue: CGFloat(z)/255.0, alpha: 1)
     }
-
+    
+    //MARK: Copy compliance
+    required init(_ model: PixelPoint) {
+        self.x = model.x
+        self.y = model.y
+        self.z = model.z
+        self.parentCluster = model.parentCluster
+    }
+    
+    /* Returns a deep copy of Self */
+    func copy() -> PixelPoint {
+        return PixelPoint.init(self)
+    }
 }
