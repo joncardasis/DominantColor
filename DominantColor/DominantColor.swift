@@ -169,18 +169,83 @@ func recalculateCentroids(clusters: inout [Cluster]){
     }
 }
 
+//https://msdn.microsoft.com/en-us/magazine/mt185575.aspx
+//Pre: numClusters > 0
+//Using algorithmic seeding, distribute clusters to the best of our knowledge of the data set
+//Pre: Will assign clusters to inital positions. Clusters should be empty
+//Uses proportional fitness selection to map the cluster's centroids
+func kPlusPlusClusterDistribution(points: inout [PixelPoint], clusters: inout [Cluster], numClusters: Int) {
+    var usedPoints = [Int]() //stores indices of used points from points array
+    
+    //Assign first cluster to random point in points
+    let randomPointIndex = Int(arc4random_uniform(UInt32(points.count)))
+    let firstCluster = Cluster(id: 0)
+    firstCluster.centroid.setCoords(x: points[randomPointIndex].x, y: points[randomPointIndex].y, z: points[randomPointIndex].z)
+    clusters.append(firstCluster)
+    usedPoints.append(randomPointIndex)
+    
+    for k in 1..<numClusters {
+        //Get distance-squared values from each point to its closest cluster
+        var dSquared = [Double](repeating: 0, count: points.count)
+        for (i,point) in points.enumerated() {
+            if !usedPoints.contains(i) {
+                //Dist between point and cluster
+                var distances = [Double](repeating: 0, count: k)
+                for i in 0..<distances.count {
+                    let deltaX = Double(clusters.last!.centroid.x)-Double(point.x)
+                    let deltaY = Double(clusters.last!.centroid.y)-Double(point.y)
+                    let deltaZ = Double(clusters.last!.centroid.z)-Double(point.z)
+                    let distSquared = pow(deltaX, 2) + pow(deltaY, 2) + pow(deltaZ, 2)
+                    
+                    distances[i] = distSquared
+                }
+                dSquared[i] = distances.min()!
+            }
+        }
+        
+        //Generate random value [0.0, 1.0] and sum total distances
+        let rand = Double(arc4random_uniform(101)) / 100.0 //random val b/w 0 and 1.0
+        var totalDist: Double = 0.0
+        for dist in dSquared {
+            totalDist += dist
+        }
+        
+        //Find the best index (in points array) which is not taken and is 'far' away from other centroids
+        var cumulative: Double = 0.0
+        var bestIndex: Int = 0 //best index from other centroids
+        for _ in 0..<points.count*2 where usedPoints.last != bestIndex {
+            cumulative += dSquared[bestIndex]
+            if cumulative >= rand && !usedPoints.contains(bestIndex) {
+                usedPoints.append(bestIndex) //don't pick again
+            }
+            else{
+                bestIndex += 1
+                if bestIndex >= dSquared.count { //loop num back to zero
+                    bestIndex = 0
+                }
+            }
+        }
+        
+        let newCluster = Cluster(id: k)
+        newCluster.centroid.setCoords(x: points[bestIndex].x, y: points[bestIndex].y, z: points[bestIndex].z)
+        clusters.append(newCluster)
+    }
+}
 
-func kmeans(tempImage: UIImage/*, points: [PixelPoint]*/, numClusters n: Int, minDelta: Double = 0.001) -> [PixelPoint]{
+
+func kmeans(tempImage: UIImage/*, points: [PixelPoint]*/, numClusters k: Int, minDelta: Double = 0.001) -> [PixelPoint]{
     var clusters = [Cluster]()
     var points = getPixels(from: tempImage)
     var finished = false
     
     /* Create inital clusters */
-    for i in 0..<n {
-        let cluster = Cluster(id: i)
-        cluster.setCentroidRandom(min: 0, max: 256)
-        clusters.append(cluster)
-    }
+    kPlusPlusClusterDistribution(points: &points, clusters: &clusters, numClusters: k)
+//    for i in 0..<n {
+//        let cluster = Cluster(id: i)
+//        cluster.setCentroidRandom(min: 0, max: 256)
+//        clusters.append(cluster)
+//    }
+    
     
     //DEBUG
     //clusters[0].centroid.setCoords(x: 255, y: 243, z: 24)
