@@ -8,31 +8,37 @@
 import UIKit
 import ImageIO
 
-struct Properties{
-    static let maxImageDimension = 200
+fileprivate struct Properties{
+    //Image will resized before calculations. Max dimension length.
+    static let maxImageDimension: Int = 300
+    
+    //Count only every pixelOffset pixel in the image for calculation
+    static let pixelOffset: Int = 2
 }
 
 func scaledImage(_ image: UIImage, ofMaxDimension dim: Int) -> CGImage{
     let imageSource = CGImageSourceCreateWithData(UIImagePNGRepresentation(image) as! CFData, nil)
     
+    let imageDim = Int(max(image.size.width, image.size.height))
+    let resizeDim = (dim > imageDim) ? dim : imageDim
+    
     let scaleOptions = [
         kCGImageSourceCreateThumbnailFromImageAlways as String: true as NSObject,
-        kCGImageSourceThumbnailMaxPixelSize as String: dim as NSObject
-    ]23
+        kCGImageSourceThumbnailMaxPixelSize as String: resizeDim as NSObject
+    ]
     
     return CGImageSourceCreateThumbnailAtIndex(imageSource!, 0, scaleOptions as CFDictionary)!//.flatMap{ $0 }!
 }
 
 // @param - pixelOffset: how many pixels should be skipped between each read (ex 2 will read every other pixel)
 //TODO: need to fix pixelOffset - needs to calibrate to assume like pixels on border elements
-func getPixels(from image: CGImage, pixelOffset: Int = 2) -> [PixelPoint]{
+func getPixels(from image: CGImage, pixelOffset: Int = Properties.pixelOffset) -> [PixelPoint]{
     //let scaledImg = scaledImage(image, ofMaxDimension: Properties.maxImageDimension)
     var pixels = [PixelPoint?](repeating: nil, count: (image.width * image.height)/pixelOffset)
     let imageData: UnsafePointer<UInt8> = CFDataGetBytePtr(image.dataProvider?.data)
 
     for i in 0..<(image.width*image.height)/pixelOffset {
         //Read as RGBA8888 Big-endian
-        
         let r = imageData[i*4 + 1]
         let g = imageData[i*4 + 2]
         let b = imageData[i*4 + 3] 

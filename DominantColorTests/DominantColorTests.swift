@@ -51,17 +51,20 @@ class DominantColorTests: XCTestCase {
     
     func testKMeansPerformance() {
         let image = UIImage(named: "Nike_small.jpeg")!
-        
         var centroids: [PixelPoint]!
+        var colors = Array<Array<UIColor>>(repeating: [UIColor](), count: 10)
+        
+        var iteration = 0
         self.measure {
             centroids = kmeans(tempImage: image, numClusters: 4)
-        
-            var colors = [UIColor]()
+            
             for point in centroids {
-                colors.append(point.colorValue())
+                colors[iteration].append(point.colorValue())
             }
-            print(colors)
+            iteration += 1
         }
+        
+        print(colors)
     }
     
 
