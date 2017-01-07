@@ -18,6 +18,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Override point for customization after application launch.
         let image = UIImage(named: "Nike_small.jpeg")!
         
+        
         let centroids = kmeans(tempImage: image, numClusters: 4)
         
         var colors = [UIColor]()
@@ -25,7 +26,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             colors.append(point.colorValue())
         }
         print(colors)
-        
+ 
         
         return true
     }

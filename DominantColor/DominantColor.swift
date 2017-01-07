@@ -5,7 +5,6 @@
 //  Created by Jonathan Cardasis on 12/1/16.
 //  Copyright © 2016 Jonathan Cardasis. All rights reserved.
 //
-
 import UIKit
 import ImageIO
 
@@ -13,103 +12,32 @@ struct Properties{
     static let maxImageDimension = 200
 }
 
-//extension Data {
-//    func asArray<T>(type: T.Type) -> [T] {
-//        return self.withUnsafeBytes{
-//            [T](UnsafeBufferPointer(start: $0, count: self.count/MemoryLayout<T>.stride))
-//        }
-//    }
-//}
-//
-//extension UIImage {
-//    func getPixelColor(pos: CGPoint) -> [UInt8] {
-//        
-//        let pixelData = self.cgImage!.dataProvider!.data
-//        let data: UnsafePointer<UInt8> = CFDataGetBytePtr(pixelData)
-//        
-//        let pixelInfo: Int = ((Int(self.size.width) * Int(pos.y)) + Int(pos.x)) * 4
-//        
-//        //TODO: bitshift to make it faster?
-//        let r = data[pixelInfo]
-//        let g = data[pixelInfo+1]
-//        let b = data[pixelInfo+2]
-//        let a = data[pixelInfo+3]
-//        
-//        //return UIColor(red: r, green: g, blue: b, alpha: a)
-//        return [r,g,b,a]
-//    }
-//}
-
 func scaledImage(_ image: UIImage, ofMaxDimension dim: Int) -> CGImage{
     let imageSource = CGImageSourceCreateWithData(UIImagePNGRepresentation(image) as! CFData, nil)
     
     let scaleOptions = [
         kCGImageSourceCreateThumbnailFromImageAlways as String: true as NSObject,
         kCGImageSourceThumbnailMaxPixelSize as String: dim as NSObject
-    ]
+    ]23
     
-    //let img = CGImageSourceCreateImageAtIndex(imageSource!, 0, scaleOptions as CFDictionary).flatMap{ UIImage(cgImage: $0) }!
-    
-    //return CGImageSourceCreateImageAtIndex(imageSource!, 0, scaleOptions as CFDictionary)!
     return CGImageSourceCreateThumbnailAtIndex(imageSource!, 0, scaleOptions as CFDictionary)!//.flatMap{ $0 }!
 }
 
+// @param - pixelOffset: how many pixels should be skipped between each read (ex 2 will read every other pixel)
+//TODO: need to fix pixelOffset - needs to calibrate to assume like pixels on border elements
+func getPixels(from image: CGImage, pixelOffset: Int = 2) -> [PixelPoint]{
+    //let scaledImg = scaledImage(image, ofMaxDimension: Properties.maxImageDimension)
+    var pixels = [PixelPoint?](repeating: nil, count: (image.width * image.height)/pixelOffset)
+    let imageData: UnsafePointer<UInt8> = CFDataGetBytePtr(image.dataProvider?.data)
 
-func getPixels(from image: UIImage) -> [PixelPoint]{
-    let scaledImg = scaledImage(image, ofMaxDimension: Properties.maxImageDimension)
-    var pixels = [PixelPoint?](repeating: nil, count: scaledImg.width * scaledImg.height)
-    let imageData: UnsafePointer<UInt8> = CFDataGetBytePtr(scaledImg.dataProvider?.data)
-    
-    //DEBUG
-    /*
-    let rawData: UnsafeMutablePointer<UInt8> = malloc(scaledImg.width * scaledImg.height * 4)
-    let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedFirst.rawValue | CGBitmapInfo.byteOrder32Big.rawValue)
-    let context = CGContext.init(data: rawData,
-                                 width: scaledImg.width,
-                                 height: scaledImg.height,
-                                 bitsPerComponent: 8,
-                                 bytesPerRow: 4*scaledImg.width,
-                                 space: CGColorSpaceCreateDeviceRGB(),
-                                 bitmapInfo: bitmapInfo.rawValue)
-    
-    context?.draw(scaledImg, in: CGRect(x:0, y:0, width: scaledImg.width, height: scaledImg.height))
-    
-    //use rawData
-    let bytesPerRow = 4 * scaledImg.width
-    let y = 0, x = 0
-    let startByte = (bytesPerRow * y) + x * 4
-    
-    print("red: \(rawData[startByte])\tgreen: \(rawData[startByte+1])\tblue:\(rawData[startByte+2])")
-    
-    free(rawData)*/
-    
-    //END DEBUG
-    
-    
-    //DEBUG
-    
-    //END DEBUG
-
-    for (i,_) in stride(from: 0, to: CFDataGetLength(scaledImg.dataProvider?.data), by: 4).enumerated() {
+    for i in 0..<(image.width*image.height)/pixelOffset {
         //Read as RGBA8888 Big-endian
-        
-        
-        //DEBUG
-        //if i==1 {
-    //        var str = ""
-    //        for j in 0..<4 {
-    //            str += String(format: "%2X", imageData[i*4+j])
-    //        }
-    //        print("\(str)")
-        //}
-        //END DEBUG
         
         let r = imageData[i*4 + 1]
         let g = imageData[i*4 + 2]
-        let color_b = imageData[i*4 + 3] //TODO: bug? b not a valid variable?
+        let b = imageData[i*4 + 3] 
 
-        //let color = UIColor(red: CGFloat(r)/255.0, green: CGFloat(g)/255.0, blue: CGFloat(color_b)/255.0, alpha: 1)
-        pixels[i] = (PixelPoint(x: r, y: g, z: color_b))
+        pixels[i] = (PixelPoint(x: r, y: g, z: b))
     }
 
     return pixels as! [PixelPoint]
@@ -218,7 +146,8 @@ func kPlusPlusClusterDistribution(points: inout [PixelPoint], clusters: inout [C
 
 func kmeans(tempImage: UIImage/*, points: [PixelPoint]*/, numClusters k: Int, minDelta: Double = 0.001) -> [PixelPoint]{
     var clusters = [Cluster]()
-    var points = getPixels(from: tempImage)
+    let adjustedImage = scaledImage(tempImage, ofMaxDimension: Properties.maxImageDimension)
+    var points = getPixels(from: adjustedImage)
     var finished = false
     
     /* Create inital clusters */
